@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Repo: https://github.com/tyrion9/spring-boot-startup-script
+# Repo: https://github.com/sangramsingha/spring-boot-startup-script
 #
 ######### PARAM ######################################
 
@@ -27,6 +27,7 @@ PWD=`pwd`
 
 ######### DO NOT MODIFY ########
 
+
 if [ -f $PID_FILE ]; then
         PID=`cat $PID_FILE`
         if [ ! -z "$PID" ] && kill -0 $PID 2>/dev/null; then
@@ -37,29 +38,41 @@ fi
 start()
 {
         if [ $RUNNING == "Y" ]; then
-                echo "Application already started"
+                echo -e "Error:\t\033[31;1mApplication already running\033[0m"
         else
                 if [ -z "$JARFILE" ]
                 then
-                        echo "ERROR: jar file not found"
+                        echo -e "Error:\t\033[31;1mjar file not found\033[0m"
                 else
-                        nohup java  $JAVA_OPT -Djava.security.egd=file:/dev/./urandom -jar $PWD/$JARFILE > nohup.out 2>&1  &
+                        nohup java  $JAVA_OPT -Djava.security.egd=file:/dev/./urandom -jar $PWD/$JARFILE >> output.log 2>&1  &
                         echo $! > $PID_FILE
-                        echo "Application $JARFILE starting..."
-                        tail -f nohup.out
+                        echo -e "INFO:\t\033[35;1mApplication $JARFILE starting...\033[0m"
+                        
+                        regex='Started.*seconds'
+                        tail ${PWD}/output.log -n0 -F | while read line; do
+                                echo "$line"
+                                if [[ $line =~ $regex ]]; then
+                                        pkill -9 -P $$ tail
+                                fi
+                        done
+                        echo -e "INFO:\t\033[35;1mServer is started\033[0m"
                 fi
         fi
+        read -n 1 -s -r -p "Press any key to exit.........."
+        echo ""
 }
 
 stop()
 {
         if [ $RUNNING == "Y" ]; then
-                kill -9 $PID
+                kill $PID
                 rm -f $PID_FILE
-                echo "Application stopped"
+                echo -e "INFO:\t\033[35;1mApplication stopped\033[0m"
         else
-                echo "Application not running"
+                echo -e "Error:\t\033[31;1mApplication not running\033[0m"
         fi
+        read -n 1 -s -r -p "Press any key to exit..........."
+        echo ""
 }
 
 restart()
@@ -81,11 +94,25 @@ case "$1" in
         'restart')
                 restart
                 ;;
-
-        *)
+        
+        '--help')
                 echo "Usage: $0 {  start | stop | restart  }"
                 exit 1
                 ;;
+        '-h')
+                echo "Usage: $0 {  start | stop | restart  }"
+                exit 1
+                ;;
+
+        '')
+                start
+                ;;
+
+        '*')
+                echo "Usage: $0 {  start | stop | restart  }"
+                exit 1
+                ;;
+
 esac
 exit 0
 
