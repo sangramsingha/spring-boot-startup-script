@@ -80,7 +80,7 @@ stop()
             echo -e "INFO:\t\033[35;1mApplication stopped\033[0m"
 
         else
-                echo "Application not running"
+                echo -e "INFO:\t\033[35;1mApplication not running\033[0m"
         fi
 
         read -n 1 -s -r -p "Press any key to exit..........."
