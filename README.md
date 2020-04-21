@@ -14,7 +14,8 @@ bootstrap.sh
 ```
 
 ### Command:
-```
+```bash
+./bootstrap.sh ## by default starts the server 
 ./bootstrap.sh start
 ./bootstrap.sh stop
 ./bootstrap.sh restart
