@@ -24,6 +24,7 @@ JARFILE=`ls -1r *.jar 2>/dev/null | head -n 1`
 PID_FILE=pid.file
 RUNNING=N
 PWD=`pwd`
+TIMEOUT=30
 
 ######### DO NOT MODIFY ########
 
@@ -65,12 +66,23 @@ start()
 stop()
 {
         if [ $RUNNING == "Y" ]; then
-                kill $PID
-                rm -f $PID_FILE
-                echo -e "INFO:\t\033[35;1mApplication stopped\033[0m"
+        	echo -e "INFO:\t\033[35;1mShutting down application gracefully pid=$PID, waiting $TIMEOUT\033[0m"
+        	kill $PID
+
+		    timeout $TIMEOUT tail --pid=$PID -f /dev/null
+
+		    if [ $? -ne 0 ]; then
+                echo -e "Error:\t\033[31;1mApplication did not shut down gracefully, killing $PID forcefully\033[0m"
+                kill -9 $PID
+		    fi
+
+            rm -f $PID_FILE
+            echo -e "INFO:\t\033[35;1mApplication stopped\033[0m"
+
         else
-                echo -e "Error:\t\033[31;1mApplication not running\033[0m"
+                echo "Application not running"
         fi
+
         read -n 1 -s -r -p "Press any key to exit..........."
         echo ""
 }
@@ -108,7 +120,7 @@ case "$1" in
                 start
                 ;;
 
-        '*')
+        *)
                 echo "Usage: $0 {  start | stop | restart  }"
                 exit 1
                 ;;
